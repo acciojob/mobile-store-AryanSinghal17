@@ -29,10 +29,7 @@ function App() {
       </nav>
 
       <Routes>
-        <Route
-          path="/"
-          element={<ProductList products={products} />}
-        />
+        <Route path="/" element={<ProductList products={products} />} />
 
         <Route
           path="/products/:id"
@@ -57,7 +54,6 @@ function ProductList({ products }) {
   return (
     <div>
       <h1>Mobile Store</h1>
-
       <h3>Total Products: {products.length}</h3>
 
       {products.map((product) => (
@@ -65,9 +61,7 @@ function ProductList({ products }) {
           <img src={product.image} alt={product.name} width="150" />
           <h2>{product.name}</h2>
           <p>₹{product.price}</p>
-          <Link to={`/products/${product.id}`}>
-            View Details
-          </Link>
+          <Link to={`/products/${product.id}`}>View Details</Link>
         </div>
       ))}
     </div>
@@ -79,7 +73,7 @@ function ProductDetails({ products }) {
   const navigate = useNavigate();
 
   const product = products.find(
-    (item) => item.id === Number(id)
+    (item) => String(item.id) === id
   );
 
   if (!product) {
@@ -94,23 +88,18 @@ function ProductDetails({ products }) {
   return (
     <div>
       <h1>Product Details</h1>
-
       <img src={product.image} alt={product.name} width="250" />
-
       <h2>{product.name}</h2>
       <h3>₹{product.price}</h3>
       <p>{product.description}</p>
 
-      <button onClick={() => navigate("/")}>
-        Back Home
-      </button>
+      <button onClick={() => navigate("/")}>Back Home</button>
     </div>
   );
 }
 
 function AdminPanel({ products, setProducts }) {
   const [editId, setEditId] = useState(null);
-
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [description, setDescription] = useState("");
@@ -127,34 +116,39 @@ function AdminPanel({ products, setProducts }) {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    if (!name.trim() || !price || Number(price) <= 0 || !description.trim() || !image.trim()) {
+    const productData = {
+      name: name.trim(),
+      price: Number(price),
+      description: description.trim(),
+      image: image.trim()
+    };
+
+    if (
+      !productData.name ||
+      !productData.price ||
+      productData.price <= 0 ||
+      !productData.description ||
+      !productData.image
+    ) {
       return;
     }
 
     if (editId !== null) {
-      setProducts((prev) =>
-        prev.map((product) =>
+      setProducts((prevProducts) =>
+        prevProducts.map((product) =>
           product.id === editId
-            ? {
-                ...product,
-                name,
-                price: Number(price),
-                description,
-                image
-              }
+            ? { ...product, ...productData }
             : product
         )
       );
     } else {
-      const newProduct = {
-        id: Math.max(0, ...products.map((p) => p.id)) + 1,
-        name,
-        price: Number(price),
-        description,
-        image
-      };
-
-      setProducts((prev) => [...prev, newProduct]);
+      setProducts((prevProducts) => [
+        ...prevProducts,
+        {
+          id: Date.now(),
+          ...productData
+        }
+      ]);
     }
 
     resetForm();
@@ -169,8 +163,8 @@ function AdminPanel({ products, setProducts }) {
   };
 
   const handleDelete = (id) => {
-    setProducts((prev) =>
-      prev.filter((product) => product.id !== id)
+    setProducts((prevProducts) =>
+      prevProducts.filter((product) => product.id !== id)
     );
 
     if (editId === id) {
@@ -238,11 +232,14 @@ function AdminPanel({ products, setProducts }) {
           <h3>{product.name}</h3>
           <p>₹{product.price}</p>
 
-          <button onClick={() => handleEdit(product)}>
+          <button type="button" onClick={() => handleEdit(product)}>
             Edit
           </button>
 
-          <button onClick={() => handleDelete(product.id)}>
+          <button
+            type="button"
+            onClick={() => handleDelete(product.id)}
+          >
             Delete
           </button>
         </div>
